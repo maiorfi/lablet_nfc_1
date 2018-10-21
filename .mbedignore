@@ -1,0 +1,7 @@
+mbed-os/features/FEATURE_BLE/*
+mbed-os/features/FEATURE_UVISOR/*
+mbed-os/features/nanostack/*
+mbed-os/features/cryptocell/*
+mbed-os/features/lorawan/*
+mbed-os/features/device_key/*
+.vscode/*
