@@ -39,11 +39,11 @@ static void on_nfc_update()
 
     if (s_latest_tag_present)
     {
-        swo.printf("### [%09d] NFC TAG PRESENT : %s ###\n", s_boot_timer.read_ms(), s_latest_tag_uid_detected.c_str());
+        swo.printf("### [%06d] NFC TAG PRESENT : %s ###\n", s_boot_timer.read_ms() / 1000, s_latest_tag_uid_detected.c_str());
     }
     else
     {
-        swo.printf("### [%09d] NFC TAG NOT PRESENT ###\n", s_boot_timer.read_ms());
+        swo.printf("### [%06d] NFC TAG NOT PRESENT ###\n", s_boot_timer.read_ms() / 1000);
     }
 
     s_latest_tag_mutex.unlock();
