@@ -52,7 +52,7 @@ public:
      * @return   >=0     length of response without prefix and suffix
      *           <0      failed to read response
      */
-    virtual int16_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout = 100) = 0;
+    virtual int16_t readResponse(uint8_t buf[], uint8_t len, uint16_t timeout = 1000) = 0;
 };
 
 #endif

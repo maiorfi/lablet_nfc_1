@@ -22,7 +22,7 @@ NfcAdapter nfc(pn532spi);
 static Thread s_thread_manage_nfc;
 static EventQueue s_eq_manage_nfc;
 
-#define NFC_EVENT_PROC_CYCLE_INTERVAL_MSECS 500
+#define NFC_EVENT_PROC_CYCLE_INTERVAL_MSECS 1000
 
 // Main
 static EventQueue s_eq_main;
@@ -31,17 +31,21 @@ static std::string s_latest_tag_uid_detected;
 static bool s_latest_tag_present;
 static Mutex s_latest_tag_mutex;
 
-static void on_tag_detected()
-{
-    s_latest_tag_mutex.lock();
-    swo.printf("### NFC TAG DETECTED : %s ###\n", s_latest_tag_uid_detected.c_str());
-    s_latest_tag_mutex.unlock();
-}
+static Timer s_boot_timer;
 
-static void on_tag_undetected()
+static void on_nfc_update()
 {
     s_latest_tag_mutex.lock();
-    swo.printf("### NFC TAG REMOVED ###\n");
+
+    if (s_latest_tag_present)
+    {
+        swo.printf("### [%09d] NFC TAG PRESENT : %s ###\n", s_boot_timer.read_ms(), s_latest_tag_uid_detected.c_str());
+    }
+    else
+    {
+        swo.printf("### [%09d] NFC TAG NOT PRESENT ###\n", s_boot_timer.read_ms());
+    }
+
     s_latest_tag_mutex.unlock();
 }
 
@@ -50,29 +54,19 @@ static void nfc_event_proc()
     bool tagPresent = nfc.tagPresent();
 
     s_latest_tag_mutex.lock();
-    bool latest_tag_detected = s_latest_tag_present;
+    s_latest_tag_present = tagPresent;
     s_latest_tag_mutex.unlock();
 
-    if (!latest_tag_detected && tagPresent)
+    if (tagPresent)
     {
         NfcTag tag = nfc.read();
 
         s_latest_tag_mutex.lock();
-        s_latest_tag_present=true;
-        s_latest_tag_uid_detected=tag.getUidString();
+        s_latest_tag_uid_detected = tag.getUidString();
         s_latest_tag_mutex.unlock();
-
-        s_eq_main.call(on_tag_detected);
     }
-    else if(latest_tag_detected && !tagPresent)
-    {
-        s_latest_tag_mutex.lock();
-        s_latest_tag_present=false;
-        s_latest_tag_uid_detected="";
-        s_latest_tag_mutex.unlock();
 
-        s_eq_main.call(on_tag_undetected);
-    }
+    s_eq_main.call(on_nfc_update);
 }
 
 static void dumpTagData(NfcTag tag)
@@ -175,6 +169,8 @@ int main()
 
     s_eq_manage_nfc.call_every(NFC_EVENT_PROC_CYCLE_INTERVAL_MSECS, nfc_event_proc);
     s_thread_manage_nfc.start(callback(&s_eq_manage_nfc, &EventQueue::dispatch_forever));
+
+    s_boot_timer.start();
 
     swo.printf("[INFO] ...running.\n");
 
