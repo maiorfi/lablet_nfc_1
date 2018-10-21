@@ -1,1 +1,1 @@
-# LABLET MBED-OS + NFC (PN532 via SPI)
+### LABLET MBED-OS + NFC (PN532 through SPI)
